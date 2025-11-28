@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 # Dataset menu: list of tuples (nama, harga, kalori, kategori)
 # kategori hanya "makanan" atau "minuman" sehingga kita bisa batasi jumlahnya
@@ -54,10 +54,15 @@ def greedy_recommendation(
     max_makanan: int | None = None,
     max_minuman: int | None = None,
     items: List[MenuItem] | None = None,
-) -> Tuple[List[MenuItem], int, int]:
+) -> Tuple[List[MenuItem], int, int, List[Dict[str, str]]]:
     """
-    Pilih menu dengan rasio kalori/harga terbaik hingga budget habis
-    sambil mempertahankan jumlah makanan dan minuman yang diinginkan.
+    Pilih menu secara greedy berdasarkan rasio kalori per rupiah (kkal/Rp)
+    paling tinggi hingga anggaran & kuota terpenuhi.
+
+    Inti pengambilan keputusan:
+    1. Urutkan semua item dari rasio kkal/Rp tertinggi ke terendah.
+    2. Ambil item pertama yang masih muat di anggaran dan belum melampaui kuota kategori.
+    3. Catat alasan (rasio, sisa anggaran, kuota) agar proses bisa dijelaskan di output.
     """
     items = items or menu_items
     ranked_items = sorted(items, key=lambda x: x[2] / x[1], reverse=True)
@@ -66,11 +71,29 @@ def greedy_recommendation(
     total_cal = 0
     makanan_dipilih = 0
     minuman_dipilih = 0
+    steps: List[Dict[str, str]] = []
 
     for (name, price, cal, kategori) in ranked_items:
+        rasio = cal / price
         if kategori == "makanan" and max_makanan is not None and makanan_dipilih >= max_makanan:
+            steps.append(
+                {
+                    "item": name,
+                    "aksi": "lewati",
+                    "alasan": "Kuota makanan terpenuhi",
+                    "rasio": f"{rasio:.4f}",
+                }
+            )
             continue
         if kategori == "minuman" and max_minuman is not None and minuman_dipilih >= max_minuman:
+            steps.append(
+                {
+                    "item": name,
+                    "aksi": "lewati",
+                    "alasan": "Kuota minuman terpenuhi",
+                    "rasio": f"{rasio:.4f}",
+                }
+            )
             continue
 
         if total_price + price <= budget:
@@ -81,6 +104,25 @@ def greedy_recommendation(
                 makanan_dipilih += 1
             else:
                 minuman_dipilih += 1
+            steps.append(
+                {
+                    "item": name,
+                    "aksi": "pilih",
+                    "alasan": "Rasio tinggi & masih dalam anggaran",
+                    "rasio": f"{rasio:.4f}",
+                    "sisa_anggaran": f"{budget - total_price}",
+                }
+            )
+        else:
+            steps.append(
+                {
+                    "item": name,
+                    "aksi": "lewati",
+                    "alasan": "Harga melebihi sisa anggaran",
+                    "rasio": f"{rasio:.4f}",
+                }
+            )
+            continue
 
         if (
             (max_makanan is None or makanan_dipilih >= max_makanan)
@@ -89,7 +131,7 @@ def greedy_recommendation(
             # target jumlah terpenuhi, tidak perlu lanjut
             break
 
-    return selected, total_price, total_cal
+    return selected, total_price, total_cal, steps
 
 
 def prompt_budget() -> int:
@@ -150,6 +192,51 @@ def prompt_count(label: str, allow_zero: bool = True) -> int | None:
             print("Input harus berupa angka atau dikosongkan.\n")
 
 
+def explain_greedy_steps(steps: List[Dict[str, str]]) -> None:
+    """Menjelaskan bagaimana algoritma greedy membuat keputusan."""
+    print("\nPenjelasan Proses Greedy:")
+    if not steps:
+        print("- Tidak ada langkah yang dicatat.")
+        return
+    for idx, step in enumerate(steps, 1):
+        base = f"{idx:02d}. {step['item']} | Rasio {step['rasio']} kkal/Rp -> {step['aksi'].upper()}"
+        reason = step.get("alasan", "-")
+        sisa = step.get("sisa_anggaran")
+        if sisa is not None:
+            print(f"{base} (Sisa anggaran: Rp{sisa}) | {reason}")
+        else:
+            print(f"{base} | {reason}")
+
+
+def validate_solution(
+    selected_items: List[MenuItem],
+    total_price: int,
+    budget: int,
+    target_makanan: int | None,
+    target_minuman: int | None,
+) -> None:
+    """Validasi sederhana bahwa solusi memenuhi anggaran & kuota."""
+    food_count = sum(1 for _, _, _, cat in selected_items if cat == "makanan")
+    drink_count = sum(1 for _, _, _, cat in selected_items if cat == "minuman")
+    issues: List[str] = []
+    if total_price > budget:
+        issues.append("Total harga melebihi anggaran.")
+    if target_makanan is not None and food_count > target_makanan:
+        issues.append("Jumlah makanan melebihi kuota.")
+    if target_minuman is not None and drink_count > target_minuman:
+        issues.append("Jumlah minuman melebihi kuota.")
+
+    print("\nValidasi Solusi:")
+    if issues:
+        for issue in issues:
+            print(f"- {issue}")
+    else:
+        utilisation = (total_price / budget * 100) if budget else 0
+        print("- Semua kendala terpenuhi.")
+        print(f"- Anggaran terpakai {utilisation:.2f}%")
+        print(f"- Makanan dipilih {food_count} item, Minuman dipilih {drink_count} item")
+
+
 def main() -> None:
     budget = prompt_budget()
     max_food = prompt_count(
@@ -158,10 +245,12 @@ def main() -> None:
     max_drink = prompt_count(
         "Masukkan jumlah minuman yang ingin dipilih (Enter jika bebas): "
     )
-    selected_items, total_price, total_cal = greedy_recommendation(
+    selected_items, total_price, total_cal, steps = greedy_recommendation(
         budget, max_food, max_drink
     )
     print_report(selected_items, total_price, total_cal, max_food, max_drink)
+    explain_greedy_steps(steps)
+    validate_solution(selected_items, total_price, budget, max_food, max_drink)
 
 
 if __name__ == "__main__":
