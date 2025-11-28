@@ -1,10 +1,7 @@
-"""
-Optimasi Pemilihan Menu Kantin Berdasarkan Anggaran Mahasiswa
-Menggunakan Algoritma Greedy
 
-Program ini menggunakan algoritma greedy untuk memaksimalkan nilai gizi
-atau kepuasan dari menu yang dipilih dalam batas anggaran yang tersedia.
-"""
+import sys
+import os
+
 
 class MenuItem:
     """Kelas untuk merepresentasikan item menu kantin"""
@@ -12,26 +9,26 @@ class MenuItem:
     def __init__(self, nama, harga, nilai_gizi, kalori=0):
         self.nama = nama
         self.harga = harga
-        self.nilai_gizi = nilai_gizi  # Bisa berupa skor kepuasan atau nilai nutrisi
+        self.nilai_gizi = nilai_gizi
         self.kalori = kalori
-        self.rasio = nilai_gizi / harga  # Rasio nilai gizi per harga (greedy metric)
+        self.rasio = nilai_gizi / harga  
 
     def __repr__(self):
         return f"{self.nama} (Rp{self.harga:,}, Nilai: {self.nilai_gizi}, Rasio: {self.rasio:.2f})"
 
 
-def algoritma_greedy_menu(daftar_menu, anggaran):
+def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
     """
     Algoritma Greedy untuk memilih menu optimal berdasarkan anggaran
 
     Args:
         daftar_menu: List dari objek MenuItem
         anggaran: Budget yang tersedia (dalam Rupiah)
+        jumlah_makanan: Jumlah maksimal makanan yang diinginkan (opsional)
 
     Returns:
         tuple: (menu_terpilih, total_harga, total_nilai_gizi, total_kalori)
     """
-    # Urutkan menu berdasarkan rasio nilai_gizi/harga (descending)
     menu_terurut = sorted(daftar_menu, key=lambda x: x.rasio, reverse=True)
 
     menu_terpilih = []
@@ -42,9 +39,17 @@ def algoritma_greedy_menu(daftar_menu, anggaran):
     print("\n" + "="*70)
     print("PROSES ALGORITMA GREEDY")
     print("="*70)
-    print(f"Anggaran tersedia: Rp{anggaran:,}\n")
+    print(f"Anggaran tersedia: Rp{anggaran:,}")
+    if jumlah_makanan:
+        print(f"Jumlah makanan maksimal: {jumlah_makanan} item")
+    print()
 
     for menu in menu_terurut:
+        # Cek apakah sudah mencapai jumlah maksimal
+        if jumlah_makanan and len(menu_terpilih) >= jumlah_makanan:
+            print(f"✓ Sudah mencapai jumlah makanan maksimal ({jumlah_makanan} item)")
+            break
+
         if total_harga + menu.harga <= anggaran:
             menu_terpilih.append(menu)
             total_harga += menu.harga
@@ -74,7 +79,8 @@ def tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, 
     print(f"\nAnggaran: Rp{anggaran:,}")
     print(f"Total Pengeluaran: Rp{total_harga:,}")
     print(f"Sisa Anggaran: Rp{anggaran - total_harga:,}")
-    print(f"\nTotal Nilai Gizi/Kepuasan: {total_nilai_gizi}")
+    print(f"\nJumlah Makanan: {len(menu_terpilih)} item")
+    print(f"Total Nilai Gizi/Kepuasan: {total_nilai_gizi}")
     print(f"Total Kalori: {total_kalori} kkal")
 
     print("\n" + "-"*70)
@@ -92,6 +98,18 @@ def tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, 
     print("="*70)
 
 
+def input_anggaran():
+    """Fungsi untuk input anggaran dengan format pemisah ribuan"""
+    print("\nMasukkan anggaran Anda (bisa pakai titik/koma sebagai pemisah)")
+    print("Contoh: 50.000 atau 50000")
+    anggaran_str = input("\nAnggaran (Rp): ")
+
+    # Hapus semua titik, koma, dan spasi untuk konversi ke integer
+    anggaran_str = anggaran_str.replace(".", "").replace(" ", "").replace(",", "")
+
+    return int(anggaran_str)
+
+
 def main():
     """Fungsi utama program"""
 
@@ -100,7 +118,6 @@ def main():
     print("Menggunakan Algoritma Greedy")
     print("="*70)
 
-    # Data menu kantin (bisa disesuaikan dengan menu kantin sebenarnya)
     daftar_menu = [
         MenuItem("Nasi Goreng", 15000, 85, 600),
         MenuItem("Mie Ayam", 12000, 70, 550),
@@ -124,21 +141,27 @@ def main():
     for menu in daftar_menu:
         print(f"  {menu}")
 
-    # Input anggaran dari user
     print("\n" + "-"*70)
     try:
-        anggaran = int(input("\nMasukkan anggaran Anda (Rp): "))
+        anggaran = input_anggaran()
 
         if anggaran <= 0:
             print("Anggaran harus lebih dari 0!")
             return
 
-        # Jalankan algoritma greedy
+        # Input jumlah makanan yang diinginkan
+        jumlah_input = input("Berapa jumlah makanan yang ingin Anda beli? (tekan Enter untuk unlimited): ")
+        jumlah_makanan = None
+        if jumlah_input.strip():
+            jumlah_makanan = int(jumlah_input)
+            if jumlah_makanan <= 0:
+                print("Jumlah makanan harus lebih dari 0!")
+                return
+
         menu_terpilih, total_harga, total_nilai_gizi, total_kalori = algoritma_greedy_menu(
-            daftar_menu, anggaran
+            daftar_menu, anggaran, jumlah_makanan
         )
 
-        # Tampilkan hasil
         tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, anggaran)
 
     except ValueError:
