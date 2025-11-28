@@ -4,7 +4,6 @@ import os
 
 
 class MenuItem:
-    """Kelas untuk merepresentasikan item menu kantin"""
 
     def __init__(self, nama, harga, nilai_gizi, kalori=0):
         self.nama = nama
@@ -18,17 +17,6 @@ class MenuItem:
 
 
 def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
-    """
-    Algoritma Greedy untuk memilih menu optimal berdasarkan anggaran dan kalori
-
-    Args:
-        daftar_menu: List dari objek MenuItem
-        anggaran: Budget yang tersedia (dalam Rupiah)
-        jumlah_makanan: Jumlah maksimal makanan yang diinginkan (opsional)
-
-    Returns:
-        tuple: (menu_terpilih, total_harga, total_nilai_gizi, total_kalori)
-    """
     menu_terurut = sorted(daftar_menu, key=lambda x: x.rasio, reverse=True)
 
     menu_terpilih = []
@@ -65,7 +53,6 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
 
 
 def tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, anggaran):
-    """Menampilkan hasil optimasi dalam format yang rapi"""
 
     print("\n" + "="*70)
     print("HASIL OPTIMASI PEMILIHAN MENU")
@@ -97,7 +84,6 @@ def tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, 
 
 
 def input_anggaran():
-    """Fungsi untuk input anggaran dengan format pemisah ribuan"""
     print("\nMasukkan anggaran Anda (bisa pakai titik/koma sebagai pemisah)")
     print("Contoh: 50.000 atau 50000")
     anggaran_str = input("\nAnggaran (Rp): ")
@@ -108,7 +94,6 @@ def input_anggaran():
 
 
 def main():
-    """Fungsi utama program"""
 
     print("\n" + "="*70)
     print("OPTIMASI PEMILIHAN MENU KANTIN")
@@ -116,21 +101,46 @@ def main():
     print("="*70)
 
     daftar_menu = [
-        MenuItem("Nasi Goreng", 15000, 85, 600),
-        MenuItem("Mie Ayam", 12000, 70, 550),
-        MenuItem("Ayam Geprek + Nasi", 18000, 90, 750),
-        MenuItem("Soto Ayam", 13000, 75, 500),
-        MenuItem("Nasi Pecel", 10000, 65, 450),
-        MenuItem("Bakso", 12000, 68, 480),
-        MenuItem("Gado-gado", 11000, 72, 400),
-        MenuItem("Nasi Uduk", 9000, 60, 520),
-        MenuItem("Bubur Ayam", 8000, 55, 350),
-        MenuItem("Nasi Kuning", 10000, 62, 480),
-        MenuItem("Es Teh Manis", 3000, 15, 100),
-        MenuItem("Es Jeruk", 4000, 20, 120),
-        MenuItem("Air Mineral", 2000, 10, 0),
-        MenuItem("Jus Alpukat", 8000, 35, 200),
-        MenuItem("Pisang Goreng", 5000, 25, 250),
+        MenuItem("Nasi Goreng", 15000, 70, 330),
+        MenuItem("Mie Goreng", 12000, 65, 350),
+        MenuItem("Ayam Goreng + Nasi", 15000, 80, 450),
+        MenuItem("Nasi Katsu", 12000, 75, 480),
+        MenuItem("Soto Ayam + Nasi", 10000, 65, 350),
+        MenuItem("Soto Ayam", 8000, 55, 150),
+        MenuItem("Gado-Gado", 10000, 72, 490),
+        MenuItem("Nasi Katsu Asam Manis", 15000, 82, 520),
+        MenuItem("Nasi Katsu Black Pepper", 15000, 81, 510),
+        MenuItem("Mie Ayam", 12000, 68, 400),
+        MenuItem("Bakso", 10000, 62, 325),
+        MenuItem("Nasi Pecel", 10000, 75, 500),
+        MenuItem("Nasi Sayur", 15000, 70, 380),
+        MenuItem("Nasi Goreng Spesial", 20000, 78, 450),
+        MenuItem("Nasi Pecel Telor", 13000, 82, 580),
+        MenuItem("Batagor (isi 10)", 10000, 78, 580),
+        MenuItem("Nasi Campur", 10000, 88, 680),
+        MenuItem("Sup Ayam + Nasi", 8000, 58, 280),
+        MenuItem("Tempe Goreng", 1000, 32, 80),
+        MenuItem("Tempura", 1000, 35, 90),
+        MenuItem("Teh Manis (hangat/dingin)", 3000, 20, 90),
+        MenuItem("Kopi Tubruk (gula)", 5000, 22, 85),
+        MenuItem("Jus Mangga", 5000, 32, 150),
+        MenuItem("Jus Jeruk", 5000, 28, 110),
+        MenuItem("Coca Cola/Fanta/Sprite", 7000, 30, 140),
+        MenuItem("Air Mineral (600 ml)", 3000, 10, 0),
+        MenuItem("Susu", 5000, 32, 150),
+        MenuItem("Teh Tawar", 2000, 8, 2),
+        MenuItem("Jus Mangga", 7000, 32, 150),
+        MenuItem("Jus Jambu", 7000, 30, 130),
+        MenuItem("Jus Wortel", 6000, 25, 80),
+        MenuItem("Cimory", 8000, 32, 130),
+        MenuItem("Teh Tarik", 8000, 35, 170),
+        MenuItem("Es Coklat", 10000, 40, 200),
+        MenuItem("Kopi Susu", 5000, 30, 130),
+        MenuItem("Minuman Vitamin", 6000, 22, 50),
+        MenuItem("Lemon Tea", 5000, 22, 90),
+        MenuItem("Nescafe Sachet", 7000, 28, 80),
+        MenuItem("Pop Ice", 5000, 32, 150),
+        MenuItem("Ultra Milk", 8000, 32, 125),
     ]
 
     print("\nDAFTAR MENU KANTIN:")
