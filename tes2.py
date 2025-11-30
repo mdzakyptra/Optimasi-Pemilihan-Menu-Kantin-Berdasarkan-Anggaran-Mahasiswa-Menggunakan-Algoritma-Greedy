@@ -52,6 +52,56 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
     return menu_terpilih, total_harga, total_nilai_gizi, total_kalori
 
 
+def jelaskan_top_3_pilihan(menu_terpilih):
+    print("\n" + "="*70)
+    print("PENJELASAN MENGAPA SISTEM MEMILIH MENU TERSEBUT")
+    print("="*70)
+
+    if not menu_terpilih:
+        print("Tidak ada menu yang terpilih.")
+        return
+
+    top_3 = menu_terpilih[:3]
+
+    for i, menu in enumerate(top_3, 1):
+        print(f"\n{i}. {menu.nama}")
+        print(f"   Harga: Rp{menu.harga:,}")
+        print(f"   Kalori: {menu.kalori} kkal")
+        print(f"   Rasio Efisiensi: {menu.rasio:.4f} kkal/Rp")
+        print(f"   \n   Alasan Pemilihan:")
+
+        if menu.rasio >= 0.06:
+            efisiensi = "SANGAT TINGGI"
+            keterangan = "memberikan kalori yang sangat banyak dengan harga yang murah"
+        elif menu.rasio >= 0.04:
+            efisiensi = "TINGGI"
+            keterangan = "memberikan kalori yang cukup banyak dengan harga yang terjangkau"
+        elif menu.rasio >= 0.02:
+            efisiensi = "SEDANG"
+            keterangan = "memberikan kalori yang cukup dengan harga yang wajar"
+        else:
+            efisiensi = "RENDAH"
+            keterangan = "dipilih karena masih sesuai anggaran meskipun efisiensi rendah"
+
+        print(f"   - Menu ini memiliki rasio efisiensi kalori/harga {efisiensi}")
+        print(f"   - Setiap Rp1.000 yang dikeluarkan menghasilkan {menu.rasio*1000:.2f} kkal")
+        print(f"   - Menu ini {keterangan}")
+
+        if menu.harga <= 5000:
+            print(f"   - Harga sangat terjangkau (≤ Rp5.000)")
+        elif menu.harga <= 10000:
+            print(f"   - Harga terjangkau (Rp5.000 - Rp10.000)")
+        elif menu.harga <= 15000:
+            print(f"   - Harga sedang (Rp10.000 - Rp15.000)")
+        else:
+            print(f"   - Harga premium (> Rp15.000) namun sebanding dengan kalori yang didapat")
+
+    if len(menu_terpilih) > 3:
+        print(f"\n   ... dan {len(menu_terpilih) - 3} menu lainnya dipilih dengan prinsip yang sama")
+
+    print("\n" + "="*70)
+
+
 def tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, anggaran):
 
     print("\n" + "="*70)
@@ -167,6 +217,8 @@ def main():
         menu_terpilih, total_harga, total_nilai_gizi, total_kalori = algoritma_greedy_menu(
             daftar_menu, anggaran, jumlah_makanan
         )
+
+        jelaskan_top_3_pilihan(menu_terpilih)
 
         tampilkan_hasil(menu_terpilih, total_harga, total_nilai_gizi, total_kalori, anggaran)
 
