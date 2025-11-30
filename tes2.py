@@ -17,7 +17,7 @@ class MenuItem:
 
 
 def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
-    menu_terurut = sorted(daftar_menu, key=lambda x: x.rasio, reverse=True)
+    menu_terurut = sorted(daftar_menu, key=lambda x: x.kalori, reverse=True)
 
     menu_terpilih = []
     total_harga = 0
@@ -25,7 +25,7 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
     total_kalori = 0
 
     print("\n" + "="*70)
-    print("PROSES ALGORITMA GREEDY (Berdasarkan Rasio Kalori/Harga)")
+    print("PROSES ALGORITMA GREEDY (Berdasarkan Kalori Maksimum)")
     print("="*70)
     print(f"Anggaran tersedia: Rp{anggaran:,}")
     if jumlah_makanan:
@@ -33,11 +33,11 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
     print()
 
     for menu in menu_terurut:
-        if jumlah_makanan and len(menu_terpilih) >= jumlah_makanan:
-            print(f"✓ Sudah mencapai jumlah makanan maksimal ({jumlah_makanan} item)")
-            break
-
         if total_harga + menu.harga <= anggaran:
+            if jumlah_makanan and len(menu_terpilih) >= jumlah_makanan:
+                print(f"✗ Melewati: {menu.nama} (Sudah mencapai jumlah maksimal {jumlah_makanan} item)")
+                continue
+
             menu_terpilih.append(menu)
             total_harga += menu.harga
             total_nilai_gizi += menu.nilai_gizi
@@ -46,8 +46,9 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
             print(f"✓ Memilih: {menu.nama}")
             print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal | Rasio: {menu.rasio:.4f} kkal/Rp")
             print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}\n")
-        else:
-            print(f"✗ Melewati: {menu.nama} (Harga: Rp{menu.harga:,} - Melebihi anggaran)")
+
+    print(f"\n✓ Selesai memilih menu. Total pengeluaran: Rp{total_harga:,}")
+    print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}")
 
     return menu_terpilih, total_harga, total_nilai_gizi, total_kalori
 
