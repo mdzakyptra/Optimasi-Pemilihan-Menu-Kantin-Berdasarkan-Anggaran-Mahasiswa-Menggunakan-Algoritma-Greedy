@@ -5,19 +5,22 @@ import os
 
 class MenuItem:
 
-    def __init__(self, nama, harga, nilai_gizi, kalori=0):
+    def __init__(self, nama, harga, nilai_gizi, kalori=0, kategori="makanan"):
         self.nama = nama
         self.harga = harga
         self.nilai_gizi = nilai_gizi
         self.kalori = kalori
+        self.kategori = kategori
         self.rasio = kalori / harga
 
     def __repr__(self):
         return f"{self.nama} - Rp{self.harga:,}"
 
 
-def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
-    menu_terurut = sorted(daftar_menu, key=lambda x: x.kalori, reverse=True)
+def algoritma_greedy_menu(daftar_menu, anggaran):
+    # Pisahkan makanan dan minuman
+    makanan = [m for m in daftar_menu if m.kategori == "makanan"]
+    minuman = [m for m in daftar_menu if m.kategori == "minuman"]
 
     menu_terpilih = []
     total_harga = 0
@@ -28,16 +31,26 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
     print("PROSES ALGORITMA GREEDY (Berdasarkan Kalori Maksimum)")
     print("="*70)
     print(f"Anggaran tersedia: Rp{anggaran:,}")
-    if jumlah_makanan:
-        print(f"Jumlah makanan maksimal: {jumlah_makanan} item")
     print()
+
+    # Fase 0: Pastikan ada minimal 1 minuman (pilih minuman termurah dulu)
+    minuman_termurah = sorted(minuman, key=lambda x: x.harga)
+    if minuman_termurah and total_harga + minuman_termurah[0].harga <= anggaran:
+        menu = minuman_termurah[0]
+        menu_terpilih.append(menu)
+        total_harga += menu.harga
+        total_nilai_gizi += menu.nilai_gizi
+        total_kalori += menu.kalori
+
+        print(f"✓ Memilih minuman wajib: {menu.nama}")
+        print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal | Rasio: {menu.rasio:.4f} kkal/Rp")
+        print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}\n")
+
+    # Fase 1: Pilih menu dengan kalori tertinggi
+    menu_terurut = sorted(daftar_menu, key=lambda x: x.kalori, reverse=True)
 
     for menu in menu_terurut:
         if total_harga + menu.harga <= anggaran:
-            if jumlah_makanan and len(menu_terpilih) >= jumlah_makanan:
-                print(f"✗ Melewati: {menu.nama} (Sudah mencapai jumlah maksimal {jumlah_makanan} item)")
-                continue
-
             menu_terpilih.append(menu)
             total_harga += menu.harga
             total_nilai_gizi += menu.nilai_gizi
@@ -46,6 +59,37 @@ def algoritma_greedy_menu(daftar_menu, anggaran, jumlah_makanan=None):
             print(f"✓ Memilih: {menu.nama}")
             print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal | Rasio: {menu.rasio:.4f} kkal/Rp")
             print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}\n")
+
+    # Fase 2: Maksimalkan penggunaan anggaran dengan menu termurah
+    sisa_anggaran = anggaran - total_harga
+    if sisa_anggaran > 0:
+        print(f"\n{'='*70}")
+        print(f"MEMAKSIMALKAN ANGGARAN (Sisa: Rp{sisa_anggaran:,})")
+        print(f"{'='*70}\n")
+
+        # Urutkan menu berdasarkan harga termurah
+        menu_termurah = sorted(daftar_menu, key=lambda x: x.harga)
+
+        while sisa_anggaran > 0:
+            menu_ditambahkan = False
+            for menu in menu_termurah:
+                if menu.harga <= sisa_anggaran:
+                    menu_terpilih.append(menu)
+                    total_harga += menu.harga
+                    total_nilai_gizi += menu.nilai_gizi
+                    total_kalori += menu.kalori
+                    sisa_anggaran -= menu.harga
+
+                    print(f"✓ Menambahkan: {menu.nama}")
+                    print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal")
+                    print(f"  Sisa anggaran: Rp{sisa_anggaran:,}\n")
+
+                    menu_ditambahkan = True
+                    break
+
+            # Jika tidak ada menu yang bisa ditambahkan, keluar dari loop
+            if not menu_ditambahkan:
+                break
 
     print(f"\n✓ Selesai memilih menu. Total pengeluaran: Rp{total_harga:,}")
     print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}")
@@ -69,36 +113,9 @@ def jelaskan_top_3_pilihan(menu_terpilih):
         print(f"   Harga: Rp{menu.harga:,}")
         print(f"   Kalori: {menu.kalori} kkal")
         print(f"   Rasio Efisiensi: {menu.rasio:.4f} kkal/Rp")
-        print(f"   \n   Alasan Pemilihan:")
-
-        if menu.rasio >= 0.06:
-            efisiensi = "SANGAT TINGGI"
-            keterangan = "memberikan kalori yang sangat banyak dengan harga yang murah"
-        elif menu.rasio >= 0.04:
-            efisiensi = "TINGGI"
-            keterangan = "memberikan kalori yang cukup banyak dengan harga yang terjangkau"
-        elif menu.rasio >= 0.02:
-            efisiensi = "SEDANG"
-            keterangan = "memberikan kalori yang cukup dengan harga yang wajar"
-        else:
-            efisiensi = "RENDAH"
-            keterangan = "dipilih karena masih sesuai anggaran meskipun efisiensi rendah"
-
-        print(f"   - Menu ini memiliki rasio efisiensi kalori/harga {efisiensi}")
-        print(f"   - Setiap Rp1.000 yang dikeluarkan menghasilkan {menu.rasio*1000:.2f} kkal")
-        print(f"   - Menu ini {keterangan}")
-
-        if menu.harga <= 5000:
-            print(f"   - Harga sangat terjangkau (≤ Rp5.000)")
-        elif menu.harga <= 10000:
-            print(f"   - Harga terjangkau (Rp5.000 - Rp10.000)")
-        elif menu.harga <= 15000:
-            print(f"   - Harga sedang (Rp10.000 - Rp15.000)")
-        else:
-            print(f"   - Harga premium (> Rp15.000) namun sebanding dengan kalori yang didapat")
 
     if len(menu_terpilih) > 3:
-        print(f"\n   ... dan {len(menu_terpilih) - 3} menu lainnya dipilih dengan prinsip yang sama")
+        print(f"\n   ... dan {len(menu_terpilih) - 3} menu lainnya")
 
     print("\n" + "="*70)
 
@@ -152,46 +169,46 @@ def main():
     print("="*70)
 
     daftar_menu = [
-        MenuItem("Nasi Goreng", 15000, 70, 330),
-        MenuItem("Mie Goreng", 12000, 65, 350),
-        MenuItem("Ayam Goreng + Nasi", 15000, 80, 450),
-        MenuItem("Nasi Katsu", 12000, 75, 480),
-        MenuItem("Soto Ayam + Nasi", 10000, 65, 350),
-        MenuItem("Soto Ayam", 8000, 55, 150),
-        MenuItem("Gado-Gado", 10000, 72, 490),
-        MenuItem("Nasi Katsu Asam Manis", 15000, 82, 520),
-        MenuItem("Nasi Katsu Black Pepper", 15000, 81, 510),
-        MenuItem("Mie Ayam", 12000, 68, 400),
-        MenuItem("Bakso", 10000, 62, 325),
-        MenuItem("Nasi Pecel", 10000, 75, 500),
-        MenuItem("Nasi Sayur", 15000, 70, 380),
-        MenuItem("Nasi Goreng Spesial", 20000, 78, 450),
-        MenuItem("Nasi Pecel Telor", 13000, 82, 580),
-        MenuItem("Batagor (isi 10)", 10000, 78, 580),
-        MenuItem("Nasi Campur", 10000, 88, 680),
-        MenuItem("Sup Ayam + Nasi", 8000, 58, 280),
-        MenuItem("Tempe Goreng", 1000, 32, 80),
-        MenuItem("Tempura", 1000, 35, 90),
-        MenuItem("Teh Manis (hangat/dingin)", 3000, 20, 90),
-        MenuItem("Kopi Tubruk (gula)", 5000, 22, 85),
-        MenuItem("Jus Mangga", 5000, 32, 150),
-        MenuItem("Jus Jeruk", 5000, 28, 110),
-        MenuItem("Coca Cola/Fanta/Sprite", 7000, 30, 140),
-        MenuItem("Air Mineral (600 ml)", 3000, 10, 0),
-        MenuItem("Susu", 5000, 32, 150),
-        MenuItem("Teh Tawar", 2000, 8, 2),
-        MenuItem("Jus Mangga", 7000, 32, 150),
-        MenuItem("Jus Jambu", 7000, 30, 130),
-        MenuItem("Jus Wortel", 6000, 25, 80),
-        MenuItem("Cimory", 8000, 32, 130),
-        MenuItem("Teh Tarik", 8000, 35, 170),
-        MenuItem("Es Coklat", 10000, 40, 200),
-        MenuItem("Kopi Susu", 5000, 30, 130),
-        MenuItem("Minuman Vitamin", 6000, 22, 50),
-        MenuItem("Lemon Tea", 5000, 22, 90),
-        MenuItem("Nescafe Sachet", 7000, 28, 80),
-        MenuItem("Pop Ice", 5000, 32, 150),
-        MenuItem("Ultra Milk", 8000, 32, 125),
+        MenuItem("Nasi Goreng", 15000, 70, 330, "makanan"),
+        MenuItem("Mie Goreng", 12000, 65, 350, "makanan"),
+        MenuItem("Ayam Goreng + Nasi", 15000, 80, 450, "makanan"),
+        MenuItem("Nasi Katsu", 12000, 75, 480, "makanan"),
+        MenuItem("Soto Ayam + Nasi", 10000, 65, 350, "makanan"),
+        MenuItem("Soto Ayam", 8000, 55, 150, "makanan"),
+        MenuItem("Gado-Gado", 10000, 72, 490, "makanan"),
+        MenuItem("Nasi Katsu Asam Manis", 15000, 82, 520, "makanan"),
+        MenuItem("Nasi Katsu Black Pepper", 15000, 81, 510, "makanan"),
+        MenuItem("Mie Ayam", 12000, 68, 400, "makanan"),
+        MenuItem("Bakso", 10000, 62, 325, "makanan"),
+        MenuItem("Nasi Pecel", 10000, 75, 500, "makanan"),
+        MenuItem("Nasi Sayur", 15000, 70, 380, "makanan"),
+        MenuItem("Nasi Goreng Spesial", 20000, 78, 450, "makanan"),
+        MenuItem("Nasi Pecel Telor", 13000, 82, 580, "makanan"),
+        MenuItem("Batagor (isi 10)", 10000, 78, 580, "makanan"),
+        MenuItem("Nasi Campur", 10000, 88, 680, "makanan"),
+        MenuItem("Sup Ayam + Nasi", 8000, 58, 280, "makanan"),
+        MenuItem("Tempe Goreng", 1000, 32, 80, "makanan"),
+        MenuItem("Tempura", 1000, 35, 90, "makanan"),
+        MenuItem("Teh Manis (hangat/dingin)", 3000, 20, 90, "minuman"),
+        MenuItem("Kopi Tubruk (gula)", 5000, 22, 85, "minuman"),
+        MenuItem("Jus Mangga", 5000, 32, 150, "minuman"),
+        MenuItem("Jus Jeruk", 5000, 28, 110, "minuman"),
+        MenuItem("Coca Cola/Fanta/Sprite", 7000, 30, 140, "minuman"),
+        MenuItem("Air Mineral (600 ml)", 3000, 10, 0, "minuman"),
+        MenuItem("Susu", 5000, 32, 150, "minuman"),
+        MenuItem("Teh Tawar", 2000, 8, 2, "minuman"),
+        MenuItem("Jus Mangga", 7000, 32, 150, "minuman"),
+        MenuItem("Jus Jambu", 7000, 30, 130, "minuman"),
+        MenuItem("Jus Wortel", 6000, 25, 80, "minuman"),
+        MenuItem("Cimory", 8000, 32, 130, "minuman"),
+        MenuItem("Teh Tarik", 8000, 35, 170, "minuman"),
+        MenuItem("Es Coklat", 10000, 40, 200, "minuman"),
+        MenuItem("Kopi Susu", 5000, 30, 130, "minuman"),
+        MenuItem("Minuman Vitamin", 6000, 22, 50, "minuman"),
+        MenuItem("Lemon Tea", 5000, 22, 90, "minuman"),
+        MenuItem("Nescafe Sachet", 7000, 28, 80, "minuman"),
+        MenuItem("Pop Ice", 5000, 32, 150, "minuman"),
+        MenuItem("Ultra Milk", 8000, 32, 125, "minuman"),
     ]
 
     print("\nDAFTAR MENU KANTIN:")
@@ -207,16 +224,8 @@ def main():
             print("Anggaran harus lebih dari 0!")
             return
 
-        jumlah_input = input("Berapa jumlah makanan yang ingin Anda beli? (tekan Enter untuk unlimited): ")
-        jumlah_makanan = None
-        if jumlah_input.strip():
-            jumlah_makanan = int(jumlah_input)
-            if jumlah_makanan <= 0:
-                print("Jumlah makanan harus lebih dari 0!")
-                return
-
         menu_terpilih, total_harga, total_nilai_gizi, total_kalori = algoritma_greedy_menu(
-            daftar_menu, anggaran, jumlah_makanan
+            daftar_menu, anggaran
         )
 
         jelaskan_top_3_pilihan(menu_terpilih)
