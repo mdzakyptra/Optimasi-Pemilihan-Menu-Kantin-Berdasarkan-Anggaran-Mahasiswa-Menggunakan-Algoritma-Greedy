@@ -17,82 +17,61 @@ class MenuItem:
         return f"{self.nama} - Rp{self.harga:,}"
 
 
-def algoritma_greedy_menu(daftar_menu, anggaran):
-    # Pisahkan makanan dan minuman
-    makanan = [m for m in daftar_menu if m.kategori == "makanan"]
-    minuman = [m for m in daftar_menu if m.kategori == "minuman"]
-
+def algoritma_greedy_knapsack(daftar_menu, anggaran):
+    """
+    Algoritma Fractional Knapsack menggunakan Greedy
+    Strategi: Memilih menu berdasarkan rasio efisiensi tertinggi (kalori/harga)
+    Setiap item hanya bisa dipilih sekali (0/1 Knapsack dengan Greedy)
+    """
     menu_terpilih = []
     total_harga = 0
     total_nilai_gizi = 0
     total_kalori = 0
 
     print("\n" + "="*70)
-    print("PROSES ALGORITMA GREEDY (Berdasarkan Kalori Maksimum)")
+    print("PROSES ALGORITMA GREEDY KNAPSACK")
+    print("Strategi: Maksimalisasi Rasio Efisiensi (Kalori/Harga)")
     print("="*70)
     print(f"Anggaran tersedia: Rp{anggaran:,}")
     print()
 
-    # Fase 0: Pastikan ada minimal 1 minuman (pilih minuman termurah dulu)
-    minuman_termurah = sorted(minuman, key=lambda x: x.harga)
-    if minuman_termurah and total_harga + minuman_termurah[0].harga <= anggaran:
-        menu = minuman_termurah[0]
-        menu_terpilih.append(menu)
-        total_harga += menu.harga
-        total_nilai_gizi += menu.nilai_gizi
-        total_kalori += menu.kalori
+    # Urutkan menu berdasarkan rasio efisiensi (kalori/harga) secara menurun
+    # Ini adalah greedy choice property dari Fractional Knapsack
+    menu_terurut = sorted(daftar_menu, key=lambda x: x.rasio, reverse=True)
 
-        print(f"✓ Memilih minuman wajib: {menu.nama}")
-        print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal | Rasio: {menu.rasio:.4f} kkal/Rp")
-        print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}\n")
+    print("URUTAN MENU BERDASARKAN RASIO EFISIENSI:")
+    print("-"*70)
+    print(f"{'No':<4} {'Menu':<30} {'Harga':<12} {'Kalori':<10} {'Rasio':<15}")
+    print("-"*70)
+    for idx, menu in enumerate(menu_terurut[:10], 1):
+        print(f"{idx:<4} {menu.nama:<30} Rp{menu.harga:<10,} {menu.kalori:<10} {menu.rasio:.4f} kkal/Rp")
+    print("="*70)
+    print()
 
-    # Fase 1: Pilih menu dengan kalori tertinggi
-    menu_terurut = sorted(daftar_menu, key=lambda x: x.kalori, reverse=True)
+    # Track menu yang sudah dipilih (untuk 0/1 Knapsack - setiap item max 1x)
+    menu_terpilih_set = set()
 
+    # Greedy: Pilih menu dengan rasio tertinggi yang masih muat di anggaran
     for menu in menu_terurut:
-        if total_harga + menu.harga <= anggaran:
+        # Cek apakah menu belum dipilih dan masih ada budget
+        if menu.nama not in menu_terpilih_set and total_harga + menu.harga <= anggaran:
             menu_terpilih.append(menu)
+            menu_terpilih_set.add(menu.nama)
             total_harga += menu.harga
             total_nilai_gizi += menu.nilai_gizi
             total_kalori += menu.kalori
 
             print(f"✓ Memilih: {menu.nama}")
-            print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal | Rasio: {menu.rasio:.4f} kkal/Rp")
+            print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal")
+            print(f"  Rasio Efisiensi: {menu.rasio:.4f} kkal/Rp (TERBAIK di sisa menu)")
+            print(f"  Total pengeluaran: Rp{total_harga:,}")
             print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}\n")
 
-    # Fase 2: Maksimalkan penggunaan anggaran dengan menu termurah
-    sisa_anggaran = anggaran - total_harga
-    if sisa_anggaran > 0:
-        print(f"\n{'='*70}")
-        print(f"MEMAKSIMALKAN ANGGARAN (Sisa: Rp{sisa_anggaran:,})")
-        print(f"{'='*70}\n")
-
-        # Urutkan menu berdasarkan harga termurah
-        menu_termurah = sorted(daftar_menu, key=lambda x: x.harga)
-
-        while sisa_anggaran > 0:
-            menu_ditambahkan = False
-            for menu in menu_termurah:
-                if menu.harga <= sisa_anggaran:
-                    menu_terpilih.append(menu)
-                    total_harga += menu.harga
-                    total_nilai_gizi += menu.nilai_gizi
-                    total_kalori += menu.kalori
-                    sisa_anggaran -= menu.harga
-
-                    print(f"✓ Menambahkan: {menu.nama}")
-                    print(f"  Harga: Rp{menu.harga:,} | Kalori: {menu.kalori} kkal")
-                    print(f"  Sisa anggaran: Rp{sisa_anggaran:,}\n")
-
-                    menu_ditambahkan = True
-                    break
-
-            # Jika tidak ada menu yang bisa ditambahkan, keluar dari loop
-            if not menu_ditambahkan:
-                break
-
-    print(f"\n✓ Selesai memilih menu. Total pengeluaran: Rp{total_harga:,}")
+    print(f"\n{'='*70}")
+    print(f"✓ Algoritma selesai. Total pengeluaran: Rp{total_harga:,}")
     print(f"  Sisa anggaran: Rp{anggaran - total_harga:,}")
+    print(f"  Efisiensi anggaran: {(total_harga/anggaran)*100:.1f}%")
+    print(f"{'='*70}")
 
     return menu_terpilih, total_harga, total_nilai_gizi, total_kalori
 
@@ -165,7 +144,7 @@ def main():
 
     print("\n" + "="*70)
     print("OPTIMASI PEMILIHAN MENU KANTIN")
-    print("Menggunakan Algoritma Greedy (Berdasarkan Kalori)")
+    print("Menggunakan Algoritma Greedy Knapsack (Berdasarkan Rasio Efisiensi)")
     print("="*70)
 
     daftar_menu = [
@@ -224,7 +203,7 @@ def main():
             print("Anggaran harus lebih dari 0!")
             return
 
-        menu_terpilih, total_harga, total_nilai_gizi, total_kalori = algoritma_greedy_menu(
+        menu_terpilih, total_harga, total_nilai_gizi, total_kalori = algoritma_greedy_knapsack(
             daftar_menu, anggaran
         )
 
