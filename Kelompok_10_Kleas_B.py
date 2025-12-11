@@ -18,11 +18,6 @@ class MenuItem:
 
 
 def algoritma_greedy_knapsack(daftar_menu, anggaran):
-    """
-    Algoritma Fractional Knapsack menggunakan Greedy
-    Strategi: Memilih menu berdasarkan rasio efisiensi tertinggi (kalori/harga)
-    Setiap item hanya bisa dipilih sekali (0/1 Knapsack dengan Greedy)
-    """
     menu_terpilih = []
     total_harga = 0
     total_nilai_gizi = 0
@@ -35,8 +30,6 @@ def algoritma_greedy_knapsack(daftar_menu, anggaran):
     print(f"Anggaran tersedia: Rp{anggaran:,}")
     print()
 
-    # Urutkan menu berdasarkan rasio efisiensi (kalori/harga) secara menurun
-    # Ini adalah greedy choice property dari Fractional Knapsack
     menu_terurut = sorted(daftar_menu, key=lambda x: x.rasio, reverse=True)
 
     print("URUTAN MENU BERDASARKAN RASIO EFISIENSI:")
@@ -48,12 +41,9 @@ def algoritma_greedy_knapsack(daftar_menu, anggaran):
     print("="*70)
     print()
 
-    # Track menu yang sudah dipilih (untuk 0/1 Knapsack - setiap item max 1x)
     menu_terpilih_set = set()
 
-    # Greedy: Pilih menu dengan rasio tertinggi yang masih muat di anggaran
     for menu in menu_terurut:
-        # Cek apakah menu belum dipilih dan masih ada budget
         if menu.nama not in menu_terpilih_set and total_harga + menu.harga <= anggaran:
             menu_terpilih.append(menu)
             menu_terpilih_set.add(menu.nama)
